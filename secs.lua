@@ -19,7 +19,6 @@
 --]]----------------------------------------------------------------------------
 
 local Core = {
-    camera = { x = 0, y = 0, rotation = 0, scale = 1 },
     updateSystems = {},
     renderSystems = {},
     components = {},
@@ -188,18 +187,6 @@ function Core:draw()
     for i,system in pairs(self.renderSystems) do
         system:update()
     end
-end
-
------------------------------------------------------------------------- CAMERA
-
---[[
-Set the camera trasformations
---]]
-function Core:initCamera(x, y, rotation, scale)
-    self.camera.x = x               or self.camera.x
-    self.camera.y = y               or self.camera.y
-    self.camera.rotation = rotation or self.camera.rotation
-    self.camera.scale = scale       or self.camera.scale
 end
 
 --------------------------------------------------------------------- DEBUGGING
