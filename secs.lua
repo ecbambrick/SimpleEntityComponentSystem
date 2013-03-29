@@ -185,29 +185,35 @@ end
 --[[
 Create a new update system for LOVE's update step
 --]]
-function Core:newUpdateSystem()
-    newSystem = self:newSystem()
+function Core:newUpdateSystem(name, priority, updateCallback)
+    newSystem = self:newSystem(name, priority, updateCallback)
     table.insert(self.updateSystems, newSystem)
+	table.sort(self.updateSystems, function(a,b)
+		return a.priority < b.priority end
+	)
     return newSystem
 end
 
 --[[
 Create a new render system for LOVE's draw step
 --]]
-function Core:newRenderSystem()
-    newSystem = self:newSystem()
+function Core:newRenderSystem(name, priority, updateCallback)
+    newSystem = self:newSystem(name, priority, updateCallback)
     table.insert(self.renderSystems, newSystem)
+	table.sort(self.renderSystems, function(a,b)
+		return a.priority < b.priority end
+	)
     return newSystem
 end
 
 --[[
 Initialize a new system
 --]]
-function Core:newSystem()
+function Core:newSystem(name, priority, updateCallback)
     local newSystem = {
-        entityTypes = {},
-        entities = {},
-        update = function() end,
+		name = name,
+		priority = priority,
+        update = updateCallback,
     }
     return newSystem
 end
