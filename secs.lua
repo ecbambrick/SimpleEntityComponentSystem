@@ -22,67 +22,137 @@ local Core = {
     updateSystems = {},
     renderSystems = {},
     components = {},
-    entities = {},
     entityFactories = {},
+    entities = {
+        all = {},
+    },
 }
 
 local debug = {
     messageLog = {},
     messageLogSize = 25,
     active = false,
-	flags = {},
+    flags = {},
 }
 
 ---------------------------------------------------------------------- ENTITIES
 
 --[[
-Creates an entity factory
+Create a new entity; if a list of components is provided then attach each one
+--]]
+function Core:newEntity(components)
+    local newEntity = {}
+    table.insert(self.entities.all, newEntity)
+    if components ~= nil and type(components) == "table" then
+        for i,c in pairs(components) do
+            Core:attachComponent(newEntity, c[1], c[2])
+        end
+    end
+    return newEntity
+end
+
+--[[
+Delete an entity and all of its components
+--]]
+function Core:deleteEntity(e)
+	-- delete components
+	for i in pairs(e) do e[i] = nil end
+	
+	-- remove entity from global entity list
+	local allEntities = self.entities.all
+	for i,entity in ipairs(allEntities) do 
+		if entity == e then table.remove(allEntities, i) end
+	end
+	
+	self:updateEntityTypes(e)
+	e = nil
+end
+
+-------------------------------------------------------------- ENTITY FACTORIES
+
+--[[
+Create an entity factory
 --]]
 function Core:newFactory(name, generateFunction)
     self.entityFactories[name] = generateFunction
 end
 
 --[[
-Creates an entity
---]]
-function Core:newEntity(components)
-    local newEntity = {}
-    if components ~= nil and type(components) == "table" then
-        for i,c in pairs(components) do
-            Core:attachComponent(newEntity, c[1], c[2])
-        end
-    end
-    table.insert(self.entities, newEntity)
-    return newEntity
-end
-
---[[
-Creates and initializes an entity from a factory
+Create an entity from a factory
 --]]
 function Core:newFactoryEntity(name, args)
     return self.entityFactories[name](args)
 end
 
+------------------------------------------------------------------ ENTITY TYPES
+
 --[[
-Delete the entity
+Create a new entity type
 --]]
-function Core:deleteEntity(e)
-    for i,v in pairs(self.updateSystems) do v:unregister(e) end
-    for i,v in pairs(self.renderSystems) do v:unregister(e) end
-    for i,v in pairs(self.entities) do
-        if v == e then self.entities[i] = nil end
+function Core:newEntityType(name, components) 
+    self.entities[name] = { components = components }
+end
+
+--[[
+delete an entity type
+--]]
+function Core:deleteEntityType(name)
+	local eType = self.entities[name]
+	for i,v in ipairs(eType) do table.remove(eType, i) end
+	for i,v in pairs(eType) do eType[i] = nil end
+	eType = nil
+end
+
+--[[
+return a pointer to the list of entities based on the type
+--]]
+function Core:getEntityList(name)
+    if name == nil then return self.entities.all
+    else return self.entities[name] end
+end
+
+--[[
+Check the requirements for each entity type and if the entity meets those
+requirements, then add it to that type's entity list
+--]]
+function Core:updateEntityTypes(e)
+    for i1, entityType in pairs(self.entities) do
+		if i1 ~= "all" then
+	
+			local exists = false
+			local meetsRequirements = true
+			local index = 0
+			
+			-- check if the entity meets the component requirements
+			for i2, component in ipairs(entityType.components) do
+				if e[component] == nil then meetsRequirements = false break end
+			end
+			
+			-- check if the entity doesn't already exist in the list
+			for i3, typeEntity in ipairs(entityType) do
+				if typeEntity == e then exists = true index = i3 end
+			end
+			
+			-- add/remove the entity to/from the type
+			if meetsRequirements and not exists then
+				table.insert(self.entities[i1], e)
+			elseif not meetsRequirements and exists then
+				table.remove(self.entities[i1], index)
+			end
+			
+        end
     end
-    e = nil
 end
 
 -------------------------------------------------------------------- COMPONENTS
 
 --[[
-Creates a component and registers it with the core system
+Create a new component with a set of default values
+_init function is used to populate an entity's component values
 --]]
 function Core:newComponent(name, initVals)
     local newComponent = {
-        _default = initVals,
+        _default = initVals or {},
         _init = function(self, e, name, args)
             e[name] = {}
             for i,v in pairs(self._default) do e[name][i] = v end
@@ -93,27 +163,27 @@ function Core:newComponent(name, initVals)
 end
 
 --[[
-Attach single component to entity
+Attach a component to an entity; update entity types
 --]]
 function Core:attachComponent(e, component, args)
+	if args == nil then args = {} end
     self.components[component]:_init(e, component, args)
-    for i,v in pairs(self.updateSystems) do v:register(e) end
-    for i,v in pairs(self.renderSystems) do v:register(e) end
+    self:updateEntityTypes(e)
 end
 
 --[[
-Remove a component from the entity
+Remove a component from an entity; update entity types
 --]]
 function Core:removeComponent(e, component)
-    for i,v in pairs(self.updateSystems) do v:unregister(e) end
-    for i,v in pairs(self.renderSystems) do v:unregister(e) end
     e[component] = nil
+    self:updateEntityTypes(e)
 end
+
 
 ----------------------------------------------------------------------- SYSTEMS
 
 --[[
-Creates a new update system and registers it with the core system
+Create a new update system for LOVE's update step
 --]]
 function Core:newUpdateSystem()
     newSystem = self:newSystem()
@@ -122,51 +192,22 @@ function Core:newUpdateSystem()
 end
 
 --[[
-Creates a new render system and registers it with the core system
+Create a new render system for LOVE's draw step
 --]]
-function Core:newRenderSystem(system)
+function Core:newRenderSystem()
     newSystem = self:newSystem()
     table.insert(self.renderSystems, newSystem)
     return newSystem
 end
 
-function Core:newSystem(system)
+--[[
+Initialize a new system
+--]]
+function Core:newSystem()
     local newSystem = {
-    
-        -- keeps track of system-related entities
         entityTypes = {},
         entities = {},
-        
-        -- main update function
-        update = function(self, dt) end,
-        
-        -- automatically register entities with the system based on components
-        registerEntityType = function (self, name, components)
-            self.entityTypes[name] = components
-            self.entities[name] = {}
-        end,
-        
-        -- determine if an entity should be registered based on its type
-        register = function(self, e)
-            for i1,v1 in pairs(self.entityTypes) do
-                local success = true
-                for i2,v2 in pairs(v1) do
-                    if e[v2] == nil then success = false break end
-                end
-                if success then table.insert(self.entities[i1], e) end
-            end
-        end,
-        
-        -- unregister an entity
-        unregister = function(self, e)
-            for i1,v1 in pairs(self.entities) do
-                for i2,v2 in pairs(v1) do
-                    if v2 == e then
-                        table.remove(v1, i)
-                    end
-                end
-            end
-        end,
+        update = function() end,
     }
     return newSystem
 end
