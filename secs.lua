@@ -55,17 +55,17 @@ end
 Delete an entity and all of its components
 --]]
 function Core:deleteEntity(e)
-	-- delete components
-	for i in pairs(e) do e[i] = nil end
-	
-	-- remove entity from global entity list
-	local allEntities = self.entities.all
-	for i,entity in ipairs(allEntities) do 
-		if entity == e then table.remove(allEntities, i) end
-	end
-	
-	self:updateEntityTypes(e)
-	e = nil
+    -- delete components
+    for i in pairs(e) do e[i] = nil end
+    
+    -- remove entity from global entity list
+    local allEntities = self.entities.all
+    for i,entity in ipairs(allEntities) do 
+        if entity == e then table.remove(allEntities, i) end
+    end
+    
+    self:updateEntityTypes(e)
+    e = nil
 end
 
 -------------------------------------------------------------- ENTITY FACTORIES
@@ -97,10 +97,10 @@ end
 delete an entity type
 --]]
 function Core:deleteEntityType(name)
-	local eType = self.entities[name]
-	for i,v in ipairs(eType) do table.remove(eType, i) end
-	for i,v in pairs(eType) do eType[i] = nil end
-	eType = nil
+    local eType = self.entities[name]
+    for i,v in ipairs(eType) do table.remove(eType, i) end
+    for i,v in pairs(eType) do eType[i] = nil end
+    eType = nil
 end
 
 --[[
@@ -117,29 +117,29 @@ requirements, then add it to that type's entity list
 --]]
 function Core:updateEntityTypes(e)
     for i1, entityType in pairs(self.entities) do
-		if i1 ~= "all" then
-	
-			local exists = false
-			local meetsRequirements = true
-			local index = 0
-			
-			-- check if the entity meets the component requirements
-			for i2, component in ipairs(entityType.components) do
-				if e[component] == nil then meetsRequirements = false break end
-			end
-			
-			-- check if the entity doesn't already exist in the list
-			for i3, typeEntity in ipairs(entityType) do
-				if typeEntity == e then exists = true index = i3 end
-			end
-			
-			-- add/remove the entity to/from the type
-			if meetsRequirements and not exists then
-				table.insert(self.entities[i1], e)
-			elseif not meetsRequirements and exists then
-				table.remove(self.entities[i1], index)
-			end
-			
+        if i1 ~= "all" then
+    
+            local exists = false
+            local meetsRequirements = true
+            local index = 0
+            
+            -- check if the entity meets the component requirements
+            for i2, component in ipairs(entityType.components) do
+                if e[component] == nil then meetsRequirements = false break end
+            end
+            
+            -- check if the entity doesn't already exist in the list
+            for i3, typeEntity in ipairs(entityType) do
+                if typeEntity == e then exists = true index = i3 end
+            end
+            
+            -- add/remove the entity to/from the type
+            if meetsRequirements and not exists then
+                table.insert(self.entities[i1], e)
+            elseif not meetsRequirements and exists then
+                table.remove(self.entities[i1], index)
+            end
+            
         end
     end
 end
@@ -166,7 +166,7 @@ end
 Attach a component to an entity; update entity types
 --]]
 function Core:attachComponent(e, component, args)
-	if args == nil then args = {} end
+    if args == nil then args = {} end
     self.components[component]:_init(e, component, args)
     self:updateEntityTypes(e)
 end
@@ -188,9 +188,9 @@ Create a new update system for LOVE's update step
 function Core:newUpdateSystem(name, priority, updateCallback)
     newSystem = self:newSystem(name, priority, updateCallback)
     table.insert(self.updateSystems, newSystem)
-	table.sort(self.updateSystems, function(a,b)
-		return a.priority < b.priority end
-	)
+    table.sort(self.updateSystems, function(a,b)
+        return a.priority < b.priority end
+    )
     return newSystem
 end
 
@@ -200,9 +200,9 @@ Create a new render system for LOVE's draw step
 function Core:newRenderSystem(name, priority, updateCallback)
     newSystem = self:newSystem(name, priority, updateCallback)
     table.insert(self.renderSystems, newSystem)
-	table.sort(self.renderSystems, function(a,b)
-		return a.priority < b.priority end
-	)
+    table.sort(self.renderSystems, function(a,b)
+        return a.priority < b.priority end
+    )
     return newSystem
 end
 
@@ -211,8 +211,8 @@ Initialize a new system
 --]]
 function Core:newSystem(name, priority, updateCallback)
     local newSystem = {
-		name = name,
-		priority = priority,
+        name = name,
+        priority = priority,
         update = updateCallback,
     }
     return newSystem
