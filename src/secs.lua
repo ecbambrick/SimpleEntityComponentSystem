@@ -136,7 +136,7 @@ end
 define a new component constructor
 --]]
 function secs.component(componentName, componentValues)
-	componentValues = componentValues or {}
+    componentValues = componentValues or {}
     components[componentName] = componentValues
 end
 
@@ -190,10 +190,12 @@ setmetatable(secs.entity, { __call = secs.entity.new })
 delete an entity from the current scene
 --]]
 function secs.delete(entity)
-    for i in pairs(entity) do secs.detach(entity, i) end
+    for i in pairs(entity) do entity[i] = nil end
+    updateEntityType(entity)
     for i,v in ipairs(scenes[currentscene].all) do
         if v == entity then
             table.remove(scenes[currentscene].all, i)
+            break
         end
     end
 end
