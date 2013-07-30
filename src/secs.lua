@@ -136,6 +136,7 @@ end
 define a new component constructor
 --]]
 function secs.component(componentName, componentValues)
+	componentValues = componentValues or {}
     components[componentName] = componentValues
 end
 
