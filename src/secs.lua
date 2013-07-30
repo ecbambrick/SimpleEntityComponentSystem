@@ -54,7 +54,7 @@ local function entityExistsInType(entity, entityType)
     for i,typeEntity in ipairs(entityType) do
         if typeEntity == entity then
             result = true
-            index = k
+            index = i
             break
         end
     end
