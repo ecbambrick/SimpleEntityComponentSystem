@@ -232,13 +232,13 @@ end
 detach (pop) a component from an entity
 --]]
 function secs.detach(entity, ...)
-	local componants = {}
+	local components = {}
 	for i,v in ipairs(arg) do
 		table.insert(components, entity[v])
 		entity[v] = nil
 	end
     updateEntityType(entity)
-    return component
+    return components
 end
 
 --[[
