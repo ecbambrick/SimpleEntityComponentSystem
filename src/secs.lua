@@ -206,11 +206,11 @@ end
 detach (pop) a component from an entity
 --]]
 function secs.detach(entity, ...)
-	local components = {}
-	for i,v in ipairs(arg) do
-		table.insert(components, entity[v])
-		entity[v] = nil
-	end
+    local components = {}
+    for i,v in ipairs(arg) do
+        table.insert(components, entity[v])
+        entity[v] = nil
+    end
     updateEntityType(entity)
     return components
 end
