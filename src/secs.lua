@@ -46,35 +46,16 @@ local function entityMeetsRequirements(entity, entityType)
 end
 
 --[[
-check if the entity doesn't already exist in the list
---]]
-local function entityExistsInType(entity, entityType)
-    local result = false
-    local index = 0
-    for i,typeEntity in ipairs(entityType) do
-        if typeEntity == entity then
-            result = true
-            index = i
-            break
-        end
-    end
-    return result, index
-end
-
---[[
 registers or unregisters an entity with an entity type;
-if it meets the requirements and is not already registered, 
-the entity is registered, otherwise the entity is unregistered
+if it meets the requirements and is not already registered, it is registered,
+otherwise the entity is unregistered
 --]]
 local function registerEntity(entity, entityType)
     local meetsRequirements = entityMeetsRequirements(entity, entityType)
-    local exists, index = entityExistsInType(entity, entityType)
-    
-    -- add/remove the entity to/from the type
-    if meetsRequirements and not exists then
-        table.insert(entityType, entity)
-    elseif not meetsRequirements and exists then
-        table.remove(entityType, index)
+    if meetsRequirements then
+        entityType.entities[entity] = true
+    else
+        entityType.entities[entity] = nil
     end
 end
 
@@ -95,7 +76,7 @@ register/unregister all entities for a specific type
 local function updateEntityTypeList(sceneName, entityTypeName)
     local scene = scenes[sceneName]
     local entityType = scene[entityTypeName]
-    for i,entity in ipairs(scene.all) do
+    for entity in pairs(scene.all) do
         registerEntity(entity, entityType)
     end
 end
@@ -165,7 +146,7 @@ function secs.type(typeName, ...)
     
     -- register entities for that type in each scene
     for sceneName,scene in pairs(scenes) do
-        scene[typeName] = { components = componentList }
+        scene[typeName] = { components = componentList, entities = {} }
         updateEntityTypeList(sceneName, typeName)
     end
 end
@@ -180,7 +161,7 @@ secs.entity = {
     new = function(self, ...)
         local entity = {}
         for i,v in ipairs(arg) do secs.attach(entity, v[1], v[2]) end
-        table.insert(scenes[currentscene].all, entity)
+        scenes[currentscene].all[entity] = true
         return entity
     end 
 }
@@ -192,12 +173,7 @@ delete an entity from the current scene
 function secs.delete(entity)
     for i in pairs(entity) do entity[i] = nil end
     updateEntityType(entity)
-    for i,v in ipairs(scenes[currentscene].all) do
-        if v == entity then
-            table.remove(scenes[currentscene].all, i)
-            break
-        end
-    end
+    scenes[currentscene].all[entity] = nil
 end
 
 --[[
@@ -245,8 +221,11 @@ end
 Return the list of entities of the provided type for the current scene
 --]]
 function secs.query(entityType)
-    if not entityType then entityType = "all" end
-    return scenes[currentscene][entityType]
+    if not entityType then
+        return scenes[currentscene].all
+    else
+        return scenes[currentscene][entityType].entities
+    end
 end
 
 ------------------------------------------------------------------------ UPDATE
