@@ -183,10 +183,8 @@ TODO: would it work to just set every scene type to {}?
 --]]
 function secs.clear()
     -- remove all components, thus deregistering the entity from each type
-    for i,entity in ipairs(scenes[currentscene].all) do
-        for componentName in pairs(entity) do 
-            secs.detach(entity, componentName)
-        end
+    for entity in pairs(scenes[currentscene].all) do
+        secs.delete(entity)
     end
     scenes[currentscene].all = {}
 end
