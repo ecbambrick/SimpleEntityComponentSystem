@@ -140,7 +140,7 @@ define a new entity type
 function secs.type(typeName, ...)
     -- create a type object
     local componentList = {}
-    for i,component in ipairs(arg) do
+    for i,component in ipairs({...}) do
         table.insert(componentList, component)
     end
     
@@ -162,7 +162,7 @@ if the table is called as a function, an empty entity will be created
 secs.entity = { 
     new = function(self, ...)
         local entity = {}
-        for i,v in ipairs(arg) do secs.attach(entity, v[1], v[2]) end
+        for i,v in ipairs({...}) do secs.attach(entity, v[1], v[2]) end
         scenes[currentscene].all[entity] = true
         return entity
     end 
@@ -209,7 +209,7 @@ detach (pop) a component from an entity
 --]]
 function secs.detach(entity, ...)
     local components = {}
-    for i,v in ipairs(arg) do
+    for i,v in ipairs({...}) do
         table.insert(components, entity[v])
         entity[v] = nil
     end
