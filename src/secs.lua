@@ -228,6 +228,13 @@ function secs.query(entityType)
     end
 end
 
+--[[
+Return the first entity of the provided type for the current scene
+--]]
+function secs.queryfirst(entityType)
+	return next(secs.query(entityType))
+end
+
 ------------------------------------------------------------------------ UPDATE
 
 --[[
