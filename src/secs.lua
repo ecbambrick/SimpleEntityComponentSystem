@@ -123,15 +123,6 @@ function secs.component(componentName, componentValues)
     components[componentName] = componentValues
 end
 
--------------------------------------------------------------- ENTITY FACTORIES
-
---[[
-define a new entity factory
---]]
-function secs.factory(name, callback)
-    secs.entity[name] = callback
-end
-
 ------------------------------------------------------------------ ENTITY TYPES
 
 --[[
