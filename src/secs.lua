@@ -88,28 +88,20 @@ end
 --[[
 define a new update system
 --]]
-function secs.updatesystem(name, priority, callback)
+function secs.updatesystem(name, callback)
     table.insert(
         updateSystems, 
-        { name = name, priority = priority, active = true, update = callback }
-    )
-    table.sort(
-        updateSystems, 
-        function(a,b) return a.priority < b.priority end
+        { name = name, active = true, update = callback }
     )
 end
 
 --[[
 define a new render system
 --]]
-function secs.rendersystem(name, priority, callback)
+function secs.rendersystem(name, callback)
     table.insert(
         renderSystems, 
-        { name = name, priority = priority, active = true, update = callback }
-    )
-    table.sort(
-        renderSystems, 
-        function(a,b) return a.priority < b.priority end
+        { name = name, active = true, update = callback }
     )
 end
 
