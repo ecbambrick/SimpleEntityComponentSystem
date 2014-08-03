@@ -73,24 +73,27 @@ end
 -- @param entity            The entity.
 -- @param componentName     The name of the component.
 -- @param newComponentData  The data to give to the component.
+-- @return					The entity.
 --------------------------------------------------------------------------------
-function EntityComponentSystem:attach(entity, componentName, componentData)
-    local defaultComponentData = self._components[componentName]
-    local newComponentData = componentData or {}
-    local component = {}
-    
-    -- Copy the default data into the component.
-    for k, v in pairs(defaultComponentData) do 
-        component[k] = v
-    end
-    
-    -- Copy the new data into the component.
-    for k, v in pairs(newComponentData) do
-        component[k] = v
-    end
-    
-    -- Attach the component to the entity
-    entity[componentName] = component
+function EntityComponentSystem:attach(entity, components)
+	for name, newComponentData in pairs(components) do
+		local defaultComponentData = self._components[name]
+		local component = {}
+		
+		-- Copy the default data into the component.
+		for k, v in pairs(defaultComponentData) do 
+			component[k] = v
+		end
+		
+		-- Copy the new data into the component.
+		for k, v in pairs(newComponentData) do
+			component[k] = v
+		end
+		
+		-- Attach the component to the entity.
+		entity[name] = component
+		
+	end
     
     -- Update the entity's groups.
     registerEntityWithGroups(entity, self._entityGroups)
@@ -165,15 +168,15 @@ end
 -- @return      The newly created entity
 --------------------------------------------------------------------------------
 function EntityComponentSystem:Entity(...)
-    local entity = {}
-    
-    for _, component in ipairs({...}) do
-        local name = component[1]
-        local data = component[2]
-        self:attach(entity, name, data)
-    end
-    
-    return entity
+	local entity = {}
+
+	if ... then
+		self:attach(entity, ...)
+	else
+		registerEntityWithGroup(entity, self._entityGroups.all)
+	end
+	
+	return entity
 end
 
 --------------------------------------------------------------------------------
