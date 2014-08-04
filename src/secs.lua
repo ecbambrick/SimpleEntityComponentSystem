@@ -23,6 +23,27 @@
 local EntityComponentSystem = {}
 
 --------------------------------------------------------------------------------
+-- Parses the given query for a list of component names and returns a table of
+-- those names. If a component name does not exist in the table of registered
+-- components, then an error is thrown.
+-- @param queryString			The query to parse.
+-- @param registeredComponents	The list of all registered components.
+-- @return 						The table of component names.
+--------------------------------------------------------------------------------
+local function parseQuery(queryString, registeredComponents)
+	local components = {}
+	
+	for componentName in queryString:gmatch("%S+") do
+		if not registeredComponents[componentName] then
+			error(componentName)
+		end
+		table.insert(components, componentName)
+	end
+	
+	return components
+end
+
+--------------------------------------------------------------------------------
 -- Registers or unregisters an entity to or from a group. If the requirements 
 -- of the group's type are met, it is registered; otherwise, it is unregistered.
 -- @param entity        The entity.
@@ -31,7 +52,7 @@ local EntityComponentSystem = {}
 local function registerEntityWithGroup(entity, group)
     local meetsRequirements = true
 
-    for _, component in ipairs(group.entityType.components) do
+    for _, component in ipairs(group.components) do
         if not entity[component] then
             meetsRequirements = false
             break
@@ -90,7 +111,7 @@ function EntityComponentSystem:attach(entity, components)
 			component[k] = v
 		end
 		
-		-- Attach the component to the entity.
+		-- Attach the component to the entity
 		entity[name] = component
 		
 	end
@@ -173,44 +194,39 @@ function EntityComponentSystem:Entity(...)
 	if ... then
 		self:attach(entity, ...)
 	else
-		registerEntityWithGroup(entity, self._entityGroups.all)
+		registerEntityWithGroups(entity, self._entityGroups)
 	end
 	
 	return entity
 end
 
 --------------------------------------------------------------------------------
--- Create and register a new entity type.
--- @param name  The name of the entity type.
--- @param ...   The list of component names for that type
---------------------------------------------------------------------------------
-function EntityComponentSystem:EntityType(name, ...)
-    local entityType = self._entityTypes[name]
-    local groups = self._entityGroups
-    entityType = { components = {...} }
-    groups[name] = { entityType = entityType, entities = {} }
-    registerEntitiesWithGroup(groups.all.entities, entityType)    
-end
-
---------------------------------------------------------------------------------
--- Return the list of entities of the provided type, or the list of all entities
--- if no type is provided.
--- @param entityTypeName	The name of the entity type to query by.
+-- Return the list of entities that satisfy the given query, or a list of all
+-- entities if no query is given.
+-- @param queryString		A whitespace-separated string of component names.
 -- @return              	The list of entities.
 --------------------------------------------------------------------------------
-function EntityComponentSystem:query(entityTypeName)
-    local entityTypeName = entityTypeName or "all"
-    return self._entityGroups[entityTypeName].entities
+function EntityComponentSystem:query(queryString)
+	local queryString = queryString or "all"
+
+	if not self._entityGroups[queryString] then
+		local components = parseQuery(queryString, self._components)
+		local groups = self._entityGroups
+		groups[queryString] = { components = components, entities = {} }
+		registerEntitiesWithGroup(groups.all.entities, groups[queryString])    
+	end
+	
+    return self._entityGroups[queryString].entities
 end
 
 --------------------------------------------------------------------------------
--- Return the first entity of the provided type for the current scene.
--- @param entityTypeName    The name of the entity type to query by.
--- @return              	The first entity of the given type or nil if there 
--- 							is no entity.
+-- Return the first entity that satisfies the given query.
+-- @param queryString		A whitespace-separated string of component names.
+-- @return              	The first entity that satisfies the query or nil
+--							if no entity is found.
 --------------------------------------------------------------------------------
-function EntityComponentSystem:queryFirst(entityTypeName)
-    return next(self:query(entityTypeName))
+function EntityComponentSystem:queryFirst(queryString)
+    return next(self:query(queryString))
 end
 
 --------------------------------------------------------------------------------
@@ -266,16 +282,12 @@ return function()
     -- contains a tables of default component properties.
     self._components = {}
     
-    -- The table of entity groups. The key is the name of the entity group and
-    -- each value contains a table of entities that belong to that group.
-    -- Each group contains an entity type and a table of entities that are of
-    -- that type. The group named "all" contains all entities.
+    -- The table of entity groups. Each group is used as a cache for query 
+	-- results. The key is the query that the group belongs to and each value
+	-- contains a table of components from the query and a table entities that
+	-- satisfy the query. The group named "all" contains all entities.
     self._entityGroups = {}
-    self._entityGroups.all = { entityType = { components = {} }, entities = {} }
-    
-    -- The table of entity types. The key is the entity type name and each 
-    -- value contains a table of compatible component names.
-    self._entityTypes = {}
+    self._entityGroups.all = { components = {}, entities = {} }
     
     -- The table of render systems. The key is the system name and each value
     -- contains a tables of systems properties.
