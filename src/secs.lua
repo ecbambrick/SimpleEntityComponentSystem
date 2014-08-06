@@ -176,8 +176,8 @@ end
 --------------------------------------------------------------------------------
 function EntityComponentSystem:draw()
     for _, system in pairs(self._renderSystems) do
-        if system.active then
-            system.update()
+        if system.isActive then
+            system:draw()
         end
     end
 end
@@ -235,13 +235,16 @@ end
 -- @param name      The name of the system.
 -- @param callback  The callback function for the system.
 --------------------------------------------------------------------------------
-function EntityComponentSystem:RenderSystem(name, callback)
-    local system = {
-        active = true,
-        name = name,
-        update = callback
-    }
-    table.insert(self._renderSystems, system)
+function EntityComponentSystem:System(name, system)
+	if system.isActive == nil then
+		system.isActive = true
+	end
+	if system.update then
+		table.insert(self._updateSystems, system)
+	end
+	if system.draw then 
+		table.insert(self._renderSystems, system)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -250,25 +253,10 @@ end
 --------------------------------------------------------------------------------
 function EntityComponentSystem:update(dt)
     for _, system in pairs(self._updateSystems) do
-        if system.active then
-            system.update(dt)
+        if system.isActive then
+            system:update(dt)
         end
     end
-end
-
---------------------------------------------------------------------------------
--- Create and register a new update system. Systems are called in the order in
--- which they are created.
--- @param name      The name of the system.
--- @param callback  The callback function for the system.
---------------------------------------------------------------------------------
-function EntityComponentSystem:UpdateSystem(name, callback)
-    local system = {
-        active = true,
-        name = name,
-        update = callback
-    }
-    table.insert(self._updateSystems, system)
 end
 
 --------------------------------------------------------------------------------
