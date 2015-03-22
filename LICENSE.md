@@ -1,0 +1,1 @@
+﻿For license information, see `src/secs.lua`.
