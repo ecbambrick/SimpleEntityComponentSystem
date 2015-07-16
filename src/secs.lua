@@ -38,7 +38,7 @@ local function parseQuery(queryString, registeredComponents)
     
     for componentName in queryString:gmatch("%S+") do
         if not registeredComponents[componentName] then
-            error(componentName)
+            error("Query Error: " .. componentName .. " could not be found.")
         end
         
         table.insert(components, componentName)
@@ -94,7 +94,8 @@ end
 
 --------------------------------------------------------------------------------
 -- Attaches a new instance of the component to the given entity using the given
--- data. Default values for the component will be used where necessary.
+-- data. Default values for the component will be used where necessary. If the
+-- component does not exist, an error is thrown.
 -- @param entity     The entity.
 -- @param components The components.
 --------------------------------------------------------------------------------
@@ -102,6 +103,10 @@ function class:attach(entity, components)
     for name, newComponentData in pairs(components) do
         local defaultComponentData = self._components[name]
         local component = {}
+        
+        if defaultComponentData == nil then
+            error("Attach error: " .. name .. " could not be found.")
+        end
         
         -- Copy the default data into the component.
         for k, v in pairs(defaultComponentData) do 
