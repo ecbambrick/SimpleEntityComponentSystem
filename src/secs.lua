@@ -93,6 +93,53 @@ local function registerEntitiesWithGroup(entities, group)
 end
 
 --------------------------------------------------------------------------------
+-- Create and register a new component constructor.
+-- @param name The name of the component.
+-- @param data The data for the component (i.e. { x = 0, y = 0 }).
+--------------------------------------------------------------------------------
+function class:addComponent(name, data)
+    self._components[name] = data or {}
+end
+
+--------------------------------------------------------------------------------
+-- Creates and registers a new entity.
+-- @param components The table of components where each component is a name and 
+--                   a set of data (i.e. { pos = { x = 1 }, isPlayer = {} }).
+-- @return           The newly created entity.
+--------------------------------------------------------------------------------
+function class:addEntity(components)
+    local entity = {}
+
+    if components then
+        self:attach(entity, components)
+    else
+        registerEntityWithGroups(entity, self._entityGroups)
+    end
+    
+    return entity
+end
+
+--------------------------------------------------------------------------------
+-- Creates and registers a new render system. Systems are called in the order 
+-- in which they are created.
+-- @param name     The name of the system.
+-- @param callback The callback function for the system.
+--------------------------------------------------------------------------------
+function class:addSystem(name, system)
+    if system.isActive == nil then
+        system.isActive = true
+    end
+    
+    if system.update then
+        table.insert(self._updateSystems, system)
+    end
+    
+    if system.draw then 
+        table.insert(self._renderSystems, system)
+    end
+end
+
+--------------------------------------------------------------------------------
 -- Attaches a new instance of the component to the given entity using the given
 -- data. Default values for the component will be used where necessary. If the
 -- component does not exist, an error is thrown.
@@ -133,15 +180,6 @@ function class:clear()
     for group in pairs(self._entityGroups) do
         group.entities = {}
     end
-end 
-
---------------------------------------------------------------------------------
--- Create and register a new component constructor.
--- @param name The name of the component.
--- @param data The data for the component (i.e. { x = 0, y = 0 }).
---------------------------------------------------------------------------------
-function class:Component(name, data)
-    self._components[name] = data or {}
 end
 
 --------------------------------------------------------------------------------
@@ -191,24 +229,6 @@ function class:draw()
 end
 
 --------------------------------------------------------------------------------
--- Creates and registers a new entity.
--- @param components The table of components where each component is a name and 
---                   a set of data (i.e. { pos = { x = 1 }, isPlayer = {} }).
--- @return           The newly created entity.
---------------------------------------------------------------------------------
-function class:Entity(components)
-    local entity = {}
-
-    if components then
-        self:attach(entity, components)
-    else
-        registerEntityWithGroups(entity, self._entityGroups)
-    end
-    
-    return entity
-end
-
---------------------------------------------------------------------------------
 -- Returns the list of entities that satisfy the given query, or a list of all
 -- entities if no query is given.
 -- @param queryString A whitespace-separated string of component names.
@@ -235,26 +255,6 @@ end
 --------------------------------------------------------------------------------
 function class:queryFirst(queryString)
     return next(self:query(queryString))
-end
-
---------------------------------------------------------------------------------
--- Creates and registers a new render system. Systems are called in the order 
--- in which they are created.
--- @param name     The name of the system.
--- @param callback The callback function for the system.
---------------------------------------------------------------------------------
-function class:System(name, system)
-    if system.isActive == nil then
-        system.isActive = true
-    end
-    
-    if system.update then
-        table.insert(self._updateSystems, system)
-    end
-    
-    if system.draw then 
-        table.insert(self._renderSystems, system)
-    end
 end
 
 --------------------------------------------------------------------------------
