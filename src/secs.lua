@@ -17,8 +17,7 @@
 --    misrepresented as being the original software.
 -- 3. This notice may not be removed or altered from any source distribution.
 -- 
--- For full documentation, see
--- https://github.com/ecbambrick/SimpleEntityComponentSystem/wiki
+-- For full documentation, see README.md
 --------------------------------------------------------------------------------
 local module = {}
 local class  = {}
