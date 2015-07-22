@@ -22,7 +22,7 @@ Components
 --------------------------------------------------------------------------------
 Components represent the data of your game objects (entities) and do not contain any logic within themselves. An entity is nothing but a table of components and a component is nothing but a table of data. For example, a `position` component could contain the (x,y) co-ordinates of a game object while a `hasInput` component could serve as a flag to signal that the entity is controllable.
 
-Components can be added and removed from entities at any time to modify their behaviour. For example, if the player entity becomes stunned and unable to move, the `hasPosition` component can be temporarily removed to prevent it from being processed by the input system. Similaly, if there was an `enemyAI` component, it could be added to a chest to suddently transform it into an enemy.
+Components can be added and removed from entities at any time to modify their behaviour. For example, if the player entity becomes stunned and unable to move, a `stunned` component can be temporarily added to prevent it from being processed by the input system. Similaly, if there was an `enemyAI` component, it could be added to a chest to suddently transform it into an enemy.
 
 Components are added using the `addComponent` function. Each component is comprised of two things:
 
